@@ -24,6 +24,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
+  overflow-x: hidden;
   font-family: Georgia, "Times New Roman", serif;
   background: var(--bg);
   color: var(--text);
@@ -299,8 +300,8 @@ input:focus-visible, select:focus-visible { border-color: var(--accent); box-sha
 
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
-  .sidebar { transform: translateX(-100%); transition: transform .28s ease; box-shadow: var(--shadow-2); }
-  .sidebar.open { transform: none; }
+  .sidebar { transform: translateX(-100%); visibility: hidden; transition: transform .28s ease, visibility .28s; box-shadow: var(--shadow-2); }
+  .sidebar.open { transform: none; visibility: visible; }
   .hamburger { display: flex; }
   .scrim.show { display: block; }
   .main { margin-left: 0; padding: 84px 18px 60px; }
