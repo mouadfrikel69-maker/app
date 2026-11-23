@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ceramic Workshop Manager</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="app">
+  <div class="scrim" id="scrim"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">C</div>
+      <div>
+        <h1>Ceramic</h1>
+        <p>Workshop Manager</p>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-link active" data-page="wages">
+        <svg viewBox="0 0 24 24"><path d="M12 1v22M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Wages
+      </button>
+      <button class="nav-link" data-page="attendance">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg>
+        Attendance
+      </button>
+      <button class="nav-link" data-page="money">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H6"/></svg>
+        Money In / Out
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <p>All data is saved on this device only.</p>
+    </div>
+  </aside>
+
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+
+  <main class="main">
+
+    <!-- ============ PAGE 1 : WAGES ============ -->
+    <section class="page active" id="page-wages">
+      <header class="page-head">
+        <h2>Wages this week</h2>
+        <p class="week-label" id="wages-week-label"></p>
+      </header>
+
+      <div class="week-balance card">
+        <div>
+          <span class="label">Total to pay this week</span>
+          <span class="big" id="wages-total">0 DH</span>
+        </div>
+        <div class="mini">
+          <span><b id="wages-count">0</b> workers</span>
+          <span><b id="wages-days">0</b> days worked</span>
+        </div>
+      </div>
+
+      <div class="cards" id="wage-cards"></div>
+
+      <div class="card form-card">
+        <h3>Add a worker</h3>
+        <form id="worker-form">
+          <input type="text" id="worker-name" placeholder="Worker name" required>
+          <label class="rate-label">Daily rate (DH)
+            <input type="number" id="worker-rate" value="130" min="0" step="1" required>
+          </label>
+          <button type="submit" class="btn btn-gold">Add worker</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============ PAGE 2 : ATTENDANCE ============ -->
+    <section class="page" id="page-attendance">
+      <header class="page-head">
+        <h2>Attendance</h2>
+        <p class="week-label" id="att-week-label"></p>
+      </header>
+
+      <div class="week-nav">
+        <button class="btn btn-ghost" id="prev-week" aria-label="Previous week">&#8592;</button>
+        <span class="week-title" id="att-week-title"></span>
+        <button class="btn btn-ghost" id="next-week" aria-label="Next week">&#8594;</button>
+      </div>
+
+      <div class="table-wrap card">
+        <table class="att-table">
+          <thead id="att-head"></thead>
+          <tbody id="att-body"></tbody>
+        </table>
+      </div>
+
+      <div class="legend">
+        <span><i class="dot dot-in"></i> Came to work</span>
+        <span><i class="dot dot-out"></i> Did not come</span>
+        <span><i class="dot dot-none"></i> Not marked yet</span>
+      </div>
+    </section>
+
+    <!-- ============ PAGE 3 : MONEY IN / OUT ============ -->
+    <section class="page" id="page-money">
+      <header class="page-head">
+        <h2>Money In / Out</h2>
+      </header>
+
+      <div class="stat-band">
+        <div class="stat stat-in">
+          <span class="label">Money In</span>
+          <span class="big" id="sum-in">0 DH</span>
+        </div>
+        <div class="stat stat-out">
+          <span class="label">Money Out</span>
+          <span class="big" id="sum-out">0 DH</span>
+        </div>
+        <div class="stat stat-bal">
+          <span class="label">Balance</span>
+          <span class="big" id="sum-bal">0 DH</span>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- MONEY IN -->
+        <div class="card">
+          <h3>Money In <span class="tag">from Alhaj</span></h3>
+          <form id="in-form" class="money-form">
+            <input type="number" id="in-amount" placeholder="Amount (DH)" min="0" step="1" required>
+            <input type="text" id="in-note" placeholder="Note (optional)">
+            <button type="submit" class="btn btn-green">Add money in</button>
+          </form>
+          <ul class="entries" id="in-list"></ul>
+        </div>
+
+        <!-- MONEY OUT -->
+        <div class="card">
+          <h3>Money Out</h3>
+          <form id="out-form" class="money-form">
+            <select id="out-category" required></select>
+            <input type="number" id="out-amount" placeholder="Amount (DH)" min="0" step="1" required>
+            <input type="text" id="out-note" placeholder="Note (optional)">
+            <button type="submit" class="btn btn-gold">Add money out</button>
+          </form>
+
+          <div class="cat-chips" id="category-chips"></div>
+
+          <form id="cat-form" class="cat-form">
+            <input type="text" id="cat-name" placeholder="New category name" required>
+            <button type="submit" class="btn btn-ghost">+ Add category</button>
+          </form>
+
+          <ul class="entries" id="out-list"></ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
