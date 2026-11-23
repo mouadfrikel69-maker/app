@@ -137,13 +137,15 @@ function renderWages() {
         (future ? " · " + future + " day(s) left this week" : "") + "</span>" +
       '<button class="remove" type="button">Remove worker</button>';
 
-    card.querySelector(".rate-input").addEventListener("change", e => {
+    card.querySelector(".rate-input").addEventListener("input", e => {
       const v = Math.round(Number(e.target.value));
-      if (!isNaN(v) && v >= 0) {
-        w.rate = v;
-        save();
-        renderAll();
-      }
+      if (isNaN(v) || v < 0) return;
+      w.rate = v;
+      save();
+      card.querySelector(".amount").textContent = dh(count * v);
+      document.getElementById("wages-total").textContent =
+        dh(state.workers.reduce((s, x) => s + weekDaysWorked(x.id, 0).count * x.rate, 0));
+      renderAttendance();
     });
 
     card.querySelector(".remove").addEventListener("click", () => {
