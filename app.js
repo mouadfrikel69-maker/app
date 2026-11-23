@@ -1,10 +1,10 @@
 /* Ceramic Workshop Manager — all data stored in localStorage on this device. */
 
-const STORAGE_KEY = "ceramic-manager-v2";
+const STORAGE_KEY = "ceramic-manager-v3";
 
 const DEFAULT_CATEGORIES = ["Mouad", "Ahmed", "Otman", "Azzeddin", "Gaz", "Breakfast", "Other"];
-const DEFAULT_WORKERS = ["Otman", "Azzeddin"].map(name => ({
-  id: uid(), name, rate: 130
+const DEFAULT_WORKERS = [{ name: "Otman", rate: 130 }, { name: "Azzeddin", rate: 200 }].map(w => ({
+  id: uid(), name: w.name, rate: w.rate
 }));
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -23,7 +23,8 @@ function load() {
         categories: s.categories || DEFAULT_CATEGORIES,
         attendance: s.attendance || {},     // "workerId|YYYY-MM-DD" -> "in" | "out"
         moneyIn: s.moneyIn || [],
-        moneyOut: s.moneyOut || []
+        moneyOut: s.moneyOut || [],
+        advances: s.advances || []          // {id, workerId, amount, date}
       };
     }
   } catch (e) { /* corrupted data: fall through to defaults */ }
@@ -32,7 +33,8 @@ function load() {
     categories: [...DEFAULT_CATEGORIES],
     attendance: {},
     moneyIn: [],
-    moneyOut: []
+    moneyOut: [],
+    advances: []
   };
 }
 
@@ -123,7 +125,10 @@ function renderWages() {
   state.workers.forEach(w => {
     const { count, future } = weekDaysWorked(w.id, 0);
     const pay = count * w.rate;
-    total += pay;
+    const advances = state.advances.filter(a => a.workerId === w.id);
+    const taken = advances.reduce((s, a) => s + Number(a.amount || 0), 0);
+    const net = pay - taken;
+    total += net;
     totalDays += count;
 
     const card = document.createElement("div");
@@ -132,9 +137,23 @@ function renderWages() {
       "<h3>" + escapeHtml(w.name) + "</h3>" +
       '<label class="rate-edit">DH / day' +
       '<input class="rate-input" type="number" min="0" step="1" value="' + w.rate + '" aria-label="Daily rate for ' + escapeHtml(w.name) + '"></label>' +
-      '<span class="amount">' + dh(pay) + "</span>" +
+      '<span class="amount">' + dh(net) + "</span>" +
       '<span class="days">' + count + " day(s) worked" +
-        (future ? " · " + future + " day(s) left this week" : "") + "</span>" +
+        (future ? " · " + future + " day(s) left this week" : "") +
+        (taken ? " · paid " + dh(pay) + " − taken " + dh(taken) : "") + "</span>" +
+      '<div class="adv-box">' +
+        '<div class="adv-rows">' +
+          advances.map(a =>
+            '<div class="adv-row"><span>' + escapeHtml(a.date || "") + " · " + dh(a.amount) + '</span>' +
+            '<button class="adv-del" type="button" data-id="' + a.id + '" aria-label="Remove this taken money">✕</button></div>'
+          ).join("") +
+        '</div>' +
+        '<div class="adv-form">' +
+          '<input class="adv-input" type="number" min="0" step="1" placeholder="Money taken (DH)" aria-label="Money taken by ' + escapeHtml(w.name) + '">' +
+          '<button class="btn btn-ghost adv-add" type="button" aria-label="Add taken money for ' + escapeHtml(w.name) + '">Add</button>' +
+        '</div>' +
+        '<span class="taken">Taken: ' + dh(taken) + "</span>" +
+      '</div>' +
       '<button class="remove" type="button">Remove worker</button>';
 
     card.querySelector(".rate-input").addEventListener("input", e => {
@@ -142,11 +161,30 @@ function renderWages() {
       if (isNaN(v) || v < 0) return;
       w.rate = v;
       save();
-      card.querySelector(".amount").textContent = dh(count * v);
+      const t = advances.reduce((s, a) => s + Number(a.amount || 0), 0);
+      card.querySelector(".amount").textContent = dh(count * v - t);
       document.getElementById("wages-total").textContent =
-        dh(state.workers.reduce((s, x) => s + weekDaysWorked(x.id, 0).count * x.rate, 0));
+        dh(state.workers.reduce((s, x) => {
+          const a = state.advances.filter(v2 => v2.workerId === x.id).reduce((ss, a2) => ss + Number(a2.amount || 0), 0);
+          return s + weekDaysWorked(x.id, 0).count * x.rate - a;
+        }, 0));
       renderAttendance();
     });
+
+    card.querySelector(".adv-add").addEventListener("click", () => {
+      const input = card.querySelector(".adv-input");
+      const v = Math.round(Number(input.value));
+      if (!input.value || isNaN(v) || v <= 0) return;
+      state.advances.push({ id: uid(), workerId: w.id, amount: v, date: fmtISO(new Date()) });
+      save();
+      renderAll();
+    });
+
+    card.querySelectorAll(".adv-del").forEach(btn => btn.addEventListener("click", () => {
+      state.advances = state.advances.filter(a => a.id !== btn.dataset.id);
+      save();
+      renderAll();
+    }));
 
     card.querySelector(".remove").addEventListener("click", () => {
       if (!confirm("Remove " + w.name + "? Attendance history stays but the worker disappears from the lists.")) return;
